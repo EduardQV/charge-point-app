@@ -1,117 +1,106 @@
-import { getMockReq, getMockRes } from '@jest-mock/express';
-import ChargePointController from "../../src/api/controllers/charge-point.controller";
-import { IChargePoint } from '../../src/api/models/charge-point.model';
-import ChargePointService from '../../src/api/services/charge-point.service';
+import { getMockReq, getMockRes } from '@jest-mock/express'
+import ChargePointController from '../../src/api/controllers/charge-point.controller'
+import { IChargePoint } from '../../src/api/models/charge-point.model'
+import ChargePointService from '../../src/api/services/charge-point.service'
 
 describe('Unit test for ChargePointController', () => {
+  const controller = new ChargePointController()
 
-    const controller = new ChargePointController();
-    
-    describe('Unit test for postChargepoint function', () => {
+  describe('Unit test for postChargepoint function', () => {
+    const { res, mockClear } = getMockRes()
 
-        const { res, mockClear } = getMockRes()
+    beforeEach(() => {
+      mockClear()
+    })
+
+    describe('Given ChargePoint', () => {
+      const chargePoint: IChargePoint = { name: 'name' }
+      const req = getMockReq({ body: chargePoint })
+
+      describe('When the operation has worked correctly', () => {
+        beforeEach(() => {
+          jest
+            .spyOn(ChargePointService.prototype, 'saveChargePoint')
+            .mockImplementationOnce(() => Promise.resolve(chargePoint))
+        })
+
+        it('Then return status 201 and saved ChargePoint', async () => {
+          await controller.postChargepoint(req, res)
+
+          expect(controller.service.saveChargePoint).toHaveBeenCalledWith(chargePoint)
+          expect(res.status).toHaveBeenCalledWith(201)
+          expect(res.json).toHaveBeenCalledWith(chargePoint)
+        })
+      })
+
+      describe('When an error occurs', () => {
+        const serverError = { status: 500, message: 'Error message' }
 
         beforeEach(() => {
-            mockClear();
-        });
+          jest
+            .spyOn(ChargePointService.prototype, 'saveChargePoint')
+            .mockImplementationOnce(() => Promise.reject(serverError))
+        })
 
-        describe('Given ChargePoint', () => {
+        it('Then return the status and message error ', async () => {
+          await controller.postChargepoint(req, res)
 
-            const chargePoint: IChargePoint = { name: "name" };
-            const req = getMockReq( { body: chargePoint } );
-            
-            describe('When the operation has worked correctly', () => {
-                
-                beforeEach(() => {
-                    jest.spyOn(ChargePointService.prototype, 'saveChargePoint')
-                        .mockImplementationOnce(() => Promise.resolve(chargePoint))
-                });
-                
-                it('Then return status 201 and saved ChargePoint', async() => {
-                    await controller.postChargepoint(req, res);
-    
-                    expect(controller.service.saveChargePoint).toHaveBeenCalledWith(chargePoint);
-                    expect(res.status).toHaveBeenCalledWith(201);
-                    expect(res.json).toHaveBeenCalledWith(chargePoint);
-                });
-            });
+          expect(controller.service.saveChargePoint).toHaveBeenCalledWith(chargePoint)
+          expect(res.status).toHaveBeenCalledWith(serverError.status)
+          expect(res.json).toHaveBeenCalledWith(serverError)
+        })
+      })
+    })
+  })
 
-            describe('When an error occurs', () => {
+  describe('Unit test for deleteChargepoint function', () => {
+    const { res, mockClear } = getMockRes()
 
-                const serverError  = { status: 500, message: "Error message" };
+    beforeEach(() => {
+      mockClear()
+    })
 
-                beforeEach(() => {
-                    jest.spyOn(ChargePointService.prototype, 'saveChargePoint')
-                        .mockImplementationOnce(() => Promise.reject(serverError))
-                });
-                
-                it('Then return the status and message error ', async() => {
-                    await controller.postChargepoint(req, res);
-    
-                    expect(controller.service.saveChargePoint).toHaveBeenCalledWith(chargePoint);
-                    expect(res.status).toHaveBeenCalledWith(serverError.status);
-                    expect(res.json).toHaveBeenCalledWith(serverError);
-                });
-            });
-            
-        });
-    });
+    describe('Given id', () => {
+      it('Should return 200 OK', () => {
+        controller.deleteChargepoint(getMockReq(), res)
 
-    describe('Unit test for deleteChargepoint function', () => {
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).toHaveBeenCalledWith({ message: 'OK' })
+      })
+    })
+  })
 
-        const { res, mockClear } = getMockRes()
+  describe('Unit test for getChargepoint function', () => {
+    const { res, mockClear } = getMockRes()
 
-        beforeEach(() => {
-            mockClear();
-        });
+    beforeEach(() => {
+      mockClear()
+    })
 
-        describe('Given id', () => {
+    describe('Given id', () => {
+      it('Should return 200 OK', () => {
+        controller.getChargepoint(getMockReq(), res)
 
-            it('Should return 200 OK', () => {
-                controller.deleteChargepoint(getMockReq(), res);
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).toHaveBeenCalledWith({ message: 'OK' })
+      })
+    })
+  })
 
-                expect(res.status).toHaveBeenCalledWith(200);
-                expect(res.json).toHaveBeenCalledWith({message: "OK"});
-            });
-        });
-    });
+  describe('Unit test for putChargepoint function', () => {
+    const { res, mockClear } = getMockRes()
 
-    describe('Unit test for getChargepoint function', () => {
+    beforeEach(() => {
+      mockClear()
+    })
 
-        const { res, mockClear } = getMockRes()
+    describe('Given ChargePoint', () => {
+      it('Should return 200 OK', () => {
+        controller.getChargepoint(getMockReq(), res)
 
-        beforeEach(() => {
-            mockClear();
-        });
-
-        describe('Given id', () => {
-
-            it('Should return 200 OK', () => {
-                controller.getChargepoint(getMockReq(), res);
-
-                expect(res.status).toHaveBeenCalledWith(200);
-                expect(res.json).toHaveBeenCalledWith({message: "OK"});
-            });
-        });
-    });
-
-    describe('Unit test for putChargepoint function', () => {
-
-        const { res, mockClear } = getMockRes()
-
-        beforeEach(() => {
-            mockClear();
-        });
-
-        describe('Given ChargePoint', () => {
-
-            it('Should return 200 OK', () => {
-                controller.getChargepoint(getMockReq(), res);
-
-                expect(res.status).toHaveBeenCalledWith(200);
-                expect(res.json).toHaveBeenCalledWith({message: "OK"});
-            });
-        });
-    });
-    
-});
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).toHaveBeenCalledWith({ message: 'OK' })
+      })
+    })
+  })
+})
