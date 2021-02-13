@@ -3,6 +3,7 @@ import * as http from 'http';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import ChargePointController from './api/controllers/charge-point.controller';
+import mongoose, { ConnectionOptions } from 'mongoose';
 
 class App {
   public app: Application;
@@ -10,8 +11,14 @@ class App {
   constructor() {
     this.app = express();
     this.setConfig();
+    this.connectToMongodb();
     this.initializeMiddlewares();
     this.initializeController();
+  }
+
+  public listen(): http.Server {
+    const serverPort = process.env.APP_PORT || 5000;
+    return this.app.listen(serverPort, () => console.log(`Server started in http://localhost:${serverPort}`))
   }
 
   private setConfig() {
@@ -27,9 +34,16 @@ class App {
     this.app.use('', new ChargePointController().router);
   }
 
-  public listen(): http.Server {
-    const serverPort = process.env.APP_PORT || 5000;
-    return this.app.listen(serverPort, () => console.log(`Server started in http://localhost:${serverPort}`))
+  public async connectToMongodb(){
+    const url: string = process.env.MONGODB_URL || 'localhost:27017/wenea';
+    const options: ConnectionOptions = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    }
+
+    mongoose.connect(`mongodb://${url}`, options)
+      .then(() => console.log(`Connection to ${url} has been established`))
+      .catch(err => console.log(err));  
   }
 }
 
