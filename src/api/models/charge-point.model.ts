@@ -1,12 +1,11 @@
 import mongoose, { Schema, Document } from 'mongoose';
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
-export interface IChargePoint extends Document {
+export interface IChargePoint {
     id?: number;
     name: string;
-    status?: any;
+    status?: IStatus;
     created_at?: Date;
-    updated_at?: Date;
     deleted_at?: Date;
 }
 
@@ -15,6 +14,15 @@ export enum IStatus {
     CHARGING = 'charging',
     WAITING = 'waiting',
     ERROR = 'error',
+}
+
+export interface IChargePointDocument extends Document {
+    id?: number;
+    name: string;
+    status?: IStatus;
+    created_at?: Date;
+    updated_at?: Date;
+    deleted_at?: Date;
 }
 
 const ChargePointSchema = new Schema({
@@ -30,4 +38,18 @@ const ChargePointSchema = new Schema({
 
 ChargePointSchema.plugin(AutoIncrement);
 
-export default mongoose.model<IChargePoint>('ChargePoint', ChargePointSchema);
+ChargePointSchema.set('toJSON', {
+    transform: (document: IChargePointDocument, returnedObject: IChargePoint) => {
+        returnedObject =  {
+          id: document._id,
+          name: document.name,
+          status: document.status,
+          created_at: document.created_at,
+          deleted_at: document.deleted_at
+        }
+
+        return returnedObject;
+    }
+});
+
+export default mongoose.model<IChargePointDocument>('ChargePoint', ChargePointSchema);

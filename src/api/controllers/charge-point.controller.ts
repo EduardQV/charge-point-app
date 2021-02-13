@@ -1,8 +1,11 @@
 import * as express from 'express';
+import { IChargePoint } from '../models/charge-point.model';
+import ChargePointService from '../services/charge-point.service';
 
 class ChargePointController {
 
   public router = express.Router();
+  public service = new ChargePointService();
 
   constructor(){
     this.initializeRutes();
@@ -16,8 +19,17 @@ class ChargePointController {
     this.router.put('/chargepoint/status', this.putChargepoint);
   }
 
-  public postChargepoint = (req: express.Request, res: express.Response) => {
-    res.status(200).json({message: "OK"});
+  public postChargepoint = async(req: express.Request, res: express.Response) => {
+    try {
+
+      const createdItem: IChargePoint = await this.service.saveChargePoint(req.body);
+     
+      res.status(201).json(createdItem);
+
+    } catch(err: any) {
+      const status = err.status? err.status : 500;
+      res.status(status).json(err)
+    }
   }
 
   public deleteChargepoint = (req: express.Request, res: express.Response) => {
