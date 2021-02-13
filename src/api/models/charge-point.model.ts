@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 export interface IChargePoint {

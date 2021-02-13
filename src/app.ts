@@ -21,20 +21,20 @@ class App {
     return this.app.listen(serverPort, () => console.log(`Server started in http://localhost:${serverPort}`))
   }
 
-  private setConfig() {
+  private setConfig(): void {
     dotenv.config({path: 'config/dev.env'});
   }
 
-  private initializeMiddlewares() {
+  private initializeMiddlewares(): void {
     this.app.use(bodyParser.urlencoded());
     this.app.use(bodyParser.json());
   }
 
-  private initializeController(){
+  private initializeController(): void {
     this.app.use('', new ChargePointController().router);
   }
 
-  public async connectToMongodb(){
+  private connectToMongodb(): void {
     const url: string = process.env.MONGODB_URL || 'localhost:27017/wenea';
     const options: ConnectionOptions = {
       useNewUrlParser: true,

@@ -19,28 +19,28 @@ class ChargePointController {
     this.router.put('/chargepoint/status', this.putChargepoint);
   }
 
-  public postChargepoint = async(req: express.Request, res: express.Response) => {
+  public postChargepoint = async(req: express.Request, res: express.Response): Promise<void> => {
     try {
 
       const createdItem: IChargePoint = await this.service.saveChargePoint(req.body);
      
       res.status(201).json(createdItem);
 
-    } catch(err: any) {
+    } catch(err) {
       const status = err.status? err.status : 500;
       res.status(status).json(err)
     }
   }
 
-  public deleteChargepoint = (req: express.Request, res: express.Response) => {
+  public deleteChargepoint = (req: express.Request, res: express.Response): void => {
     res.status(200).json({message: "OK"});
   }
 
-  public getChargepoint = (req: express.Request, res: express.Response) => {
+  public getChargepoint = (req: express.Request, res: express.Response): void => {
     res.status(200).json({message: "OK"});
   }
 
-  public putChargepoint = (req: express.Request, res: express.Response) => {
+  public putChargepoint = (req: express.Request, res: express.Response): void => {
     res.status(200).json({message: "OK"});
   }
 }
