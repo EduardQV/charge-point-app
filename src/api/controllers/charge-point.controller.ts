@@ -16,19 +16,19 @@ class ChargePointController {
     this.router.put('/chargepoint/status', this.putChargepoint);
   }
 
-  private postChargepoint = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  public postChargepoint = (req: express.Request, res: express.Response) => {
     res.status(200).json({message: "OK"});
   }
 
-  private deleteChargepoint = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  public deleteChargepoint = (req: express.Request, res: express.Response) => {
     res.status(200).json({message: "OK"});
   }
 
-  private getChargepoint = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  public getChargepoint = (req: express.Request, res: express.Response) => {
     res.status(200).json({message: "OK"});
   }
 
-  private putChargepoint = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  public putChargepoint = (req: express.Request, res: express.Response) => {
     res.status(200).json({message: "OK"});
   }
 }
