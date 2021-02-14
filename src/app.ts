@@ -40,7 +40,8 @@ class App {
     const url: string = process.env.MONGODB_URL || 'localhost:27017/wenea';
     const options: ConnectionOptions = {
       useNewUrlParser: true,
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
+      useFindAndModify: false
     };
 
     mongoose

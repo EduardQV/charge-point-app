@@ -1,3 +1,4 @@
+import { DeleteWriteOpResultObject } from 'mongodb';
 import { CallbackError, Query } from 'mongoose';
 import ChargePoint, { IChargePoint, IStatus } from '../../src/api/models/charge-point.model';
 import ChargePointService from '../../src/api/services/charge-point.service';
@@ -43,6 +44,74 @@ describe('Unit test for ChargePointService', () => {
           try {
             await service.save(chargePoint);
           } catch (err) {
+            expect(err).toEqual({ status: 500, message: expectedError.message });
+          }
+        });
+      });
+    });
+  });
+
+  describe('Unit test for deleteById function', () => {
+    const findByIdSpy = jest.spyOn(ChargePoint, 'deleteOne');
+
+    describe('Given id', () => {
+      const reqId = 2;
+
+      describe('When a ChargePoint is deleted', () => {
+        const queryResponse: DeleteWriteOpResultObject = {
+          result: {
+            ok: 1,
+            n: 1
+          },
+          deletedCount: 1
+        };
+
+        beforeEach(() => {
+          jest.spyOn(Query.prototype, 'exec').mockReturnValue(Promise.resolve(queryResponse));
+        });
+
+        it('Then resolve promise', async () => {
+          await service.deleteById(reqId);
+
+          expect(findByIdSpy).toHaveBeenCalledWith({ _id: reqId });
+        });
+      });
+
+      describe('When a ChargePoint is NOT found', () => {
+        const queryResponse: DeleteWriteOpResultObject = {
+          result: {
+            ok: 1,
+            n: 0
+          },
+          deletedCount: 0
+        };
+
+        beforeEach(() => {
+          jest.spyOn(Query.prototype, 'exec').mockReturnValue(Promise.resolve(queryResponse));
+        });
+
+        it('Then return status 404 with the error message', async () => {
+          try {
+            await service.deleteById(reqId);
+          } catch (err) {
+            expect(findByIdSpy).toHaveBeenCalledWith({ _id: reqId });
+            expect(err).toEqual({ status: 404, message: `No ChargePoint found with ID: ${reqId}` });
+          }
+        });
+      });
+
+      describe('When an error occurs', () => {
+        const expectedError: CallbackError = { name: 'errorName', message: 'Error message' };
+
+        beforeEach(() => {
+          jest.spyOn(Query.prototype, 'exec').mockReturnValue(Promise.reject(expectedError));
+        });
+
+        it('Then return status 500 with the error message', async () => {
+          try {
+            await service.deleteById(reqId);
+          } catch (err) {
+            expect(findByIdSpy).toHaveBeenCalledWith({ _id: reqId });
             expect(err).toEqual({ status: 500, message: expectedError.message });
           }
         });

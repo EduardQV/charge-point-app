@@ -29,8 +29,17 @@ class ChargePointController {
     }
   };
 
-  public deleteChargepoint = (req: Request, res: Response): void => {
-    res.status(200).json({ message: 'OK' });
+  public deleteChargepoint = async (req: Request, res: Response): Promise<void> => {
+    const id = req.params['id'];
+
+    try {
+      await this.service.deleteById(+id);
+
+      res.status(200).json({ status: 200, message: 'Chargepoint deleted successfully.' });
+    } catch (err) {
+      const status = err.status ? err.status : 500;
+      res.status(status).json(err);
+    }
   };
 
   public getChargepoint = async (req: Request, res: Response): Promise<void> => {

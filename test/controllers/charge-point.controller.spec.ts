@@ -52,17 +52,47 @@ describe('Unit test for ChargePointController', () => {
 
   describe('Unit test for deleteChargepoint function', () => {
     const { res, mockClear } = getMockRes();
+    const deleteByIdSpy = jest.spyOn(ChargePointService.prototype, 'deleteById');
 
     beforeEach(() => {
       mockClear();
     });
 
     describe('Given id', () => {
-      it('Should return 200 OK', () => {
-        controller.deleteChargepoint(getMockReq(), res);
+      const reqId = 2;
+      const req = getMockReq({ params: { id: reqId } });
 
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({ message: 'OK' });
+      describe('When ChargePoint is deleted', () => {
+        beforeEach(() => {
+          deleteByIdSpy.mockImplementationOnce(() => Promise.resolve());
+        });
+
+        it('Should return OK response', async () => {
+          await controller.deleteChargepoint(req, res);
+
+          expect(deleteByIdSpy).toHaveBeenCalledWith(reqId);
+          expect(res.status).toHaveBeenCalledWith(200);
+          expect(res.json).toHaveBeenCalledWith({
+            status: 200,
+            message: 'Chargepoint deleted successfully.'
+          });
+        });
+      });
+
+      describe('When an error occurs', () => {
+        const serverError = { status: 404, message: 'Error message' };
+
+        beforeEach(() => {
+          deleteByIdSpy.mockImplementationOnce(() => Promise.reject(serverError));
+        });
+
+        it('Then return the status and message error', async () => {
+          await controller.deleteChargepoint(req, res);
+
+          expect(deleteByIdSpy).toHaveBeenCalledWith(reqId);
+          expect(res.status).toHaveBeenCalledWith(serverError.status);
+          expect(res.json).toHaveBeenCalledWith(serverError);
+        });
       });
     });
   });
