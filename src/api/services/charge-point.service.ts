@@ -1,4 +1,3 @@
-import { DeleteWriteOpResultObject } from 'mongodb';
 import { CallbackError } from 'mongoose';
 import ChargePoint, { IChargePoint, IChargePointDocument } from '../models/charge-point.model';
 
@@ -14,13 +13,14 @@ class ChargePointService {
 
   public deleteById(id: number): Promise<void> {
     return new Promise((resolve, reject) => {
-      ChargePoint.deleteOne({ _id: id })
+      ChargePoint.findByIdAndUpdate(id, { deleted_at: new Date() })
         .exec()
-        .then((res: DeleteWriteOpResultObject) =>
-          res.deletedCount === 1
-            ? resolve()
-            : reject({ status: 404, message: `No ChargePoint found with ID: ${id}` })
-        )
+        .then((doc: IChargePointDocument | null) => {
+          if (doc) {
+            resolve();
+          }
+          reject({ status: 404, message: `No ChargePoint found with ID: ${id}` });
+        })
         .catch((err: CallbackError) => reject({ status: 500, message: err?.message }));
     });
   }

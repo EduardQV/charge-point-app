@@ -1,4 +1,3 @@
-import { DeleteWriteOpResultObject } from 'mongodb';
 import { CallbackError, Query } from 'mongoose';
 import ChargePoint, { IChargePoint, IStatus } from '../../src/api/models/charge-point.model';
 import ChargePointService from '../../src/api/services/charge-point.service';
@@ -7,6 +6,8 @@ describe('Unit test for ChargePointService', () => {
   const service = new ChargePointService();
 
   describe('Unit test for save function', () => {
+    const saveSpy = jest.spyOn(ChargePoint.prototype, 'save');
+
     describe('Given ChargePoint', () => {
       const chargePoint: IChargePoint = { name: 'name' };
 
@@ -19,9 +20,7 @@ describe('Unit test for ChargePointService', () => {
         };
 
         beforeEach(() => {
-          jest
-            .spyOn(ChargePoint.prototype, 'save')
-            .mockImplementationOnce(() => Promise.resolve(expectedChargePoint));
+          saveSpy.mockImplementationOnce(() => Promise.resolve(expectedChargePoint));
         });
 
         it('Then return the saved ChargePoint', async () => {
@@ -35,9 +34,7 @@ describe('Unit test for ChargePointService', () => {
         const expectedError: CallbackError = { name: 'errorName', message: 'Error message' };
 
         beforeEach(() => {
-          jest
-            .spyOn(ChargePoint.prototype, 'save')
-            .mockImplementationOnce(() => Promise.reject(expectedError));
+          saveSpy.mockImplementationOnce(() => Promise.reject(expectedError));
         });
 
         it('Then return status 500 with the error message', async () => {
@@ -52,18 +49,25 @@ describe('Unit test for ChargePointService', () => {
   });
 
   describe('Unit test for deleteById function', () => {
-    const findByIdSpy = jest.spyOn(ChargePoint, 'deleteOne');
+    const findByIdAndUpdateSpy = jest.spyOn(ChargePoint, 'findByIdAndUpdate');
 
     describe('Given id', () => {
       const reqId = 2;
+      const dateMock = new Date();
+
+      beforeEach(() => {
+        spyOn(global, 'Date').and.callFake(() => {
+          return dateMock;
+        });
+      });
 
       describe('When a ChargePoint is deleted', () => {
-        const queryResponse: DeleteWriteOpResultObject = {
-          result: {
-            ok: 1,
-            n: 1
-          },
-          deletedCount: 1
+        const queryResponse: IChargePoint = {
+          id: 1,
+          name: 'name',
+          status: IStatus.READY,
+          created_at: new Date(),
+          deleted_at: dateMock
         };
 
         beforeEach(() => {
@@ -73,28 +77,20 @@ describe('Unit test for ChargePointService', () => {
         it('Then resolve promise', async () => {
           await service.deleteById(reqId);
 
-          expect(findByIdSpy).toHaveBeenCalledWith({ _id: reqId });
+          expect(findByIdAndUpdateSpy).toHaveBeenCalledWith(reqId, { deleted_at: dateMock });
         });
       });
 
       describe('When a ChargePoint is NOT found', () => {
-        const queryResponse: DeleteWriteOpResultObject = {
-          result: {
-            ok: 1,
-            n: 0
-          },
-          deletedCount: 0
-        };
-
         beforeEach(() => {
-          jest.spyOn(Query.prototype, 'exec').mockReturnValue(Promise.resolve(queryResponse));
+          jest.spyOn(Query.prototype, 'exec').mockReturnValue(Promise.resolve(null));
         });
 
         it('Then return status 404 with the error message', async () => {
           try {
             await service.deleteById(reqId);
           } catch (err) {
-            expect(findByIdSpy).toHaveBeenCalledWith({ _id: reqId });
+            expect(findByIdAndUpdateSpy).toHaveBeenCalledWith(reqId, { deleted_at: dateMock });
             expect(err).toEqual({ status: 404, message: `No ChargePoint found with ID: ${reqId}` });
           }
         });
@@ -111,7 +107,7 @@ describe('Unit test for ChargePointService', () => {
           try {
             await service.deleteById(reqId);
           } catch (err) {
-            expect(findByIdSpy).toHaveBeenCalledWith({ _id: reqId });
+            expect(findByIdAndUpdateSpy).toHaveBeenCalledWith(reqId, { deleted_at: dateMock });
             expect(err).toEqual({ status: 500, message: expectedError.message });
           }
         });
