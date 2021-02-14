@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start:dev": "nodemon src/server.ts",
-    "test": "jest --config=config/jest.config.js",
+    "test": "jest --config=config/jest.config.js --verbose",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prettier:format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\""
@@ -17,6 +17,7 @@
     "body-parser": "^1.19.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "lodash": "^4.17.20",
     "mongoose": "^5.11.16",
     "mongoose-sequence": "^5.3.1"
   },
@@ -25,6 +26,7 @@
     "@types/body-parser": "^1.19.0",
     "@types/express": "^4.17.11",
     "@types/jest": "^26.0.20",
+    "@types/lodash": "^4.14.168",
     "@types/mongoose": "^5.10.3",
     "@types/node": "^14.14.27",
     "@typescript-eslint/eslint-plugin": "^4.15.0",

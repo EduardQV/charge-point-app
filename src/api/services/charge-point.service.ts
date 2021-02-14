@@ -1,4 +1,5 @@
-import { CallbackError } from 'mongoose';
+import _ from 'lodash';
+import { CallbackError, FilterQuery } from 'mongoose';
 import ChargePoint, { IChargePoint, IChargePointDocument } from '../models/charge-point.model';
 
 class ChargePointService {
@@ -17,7 +18,7 @@ class ChargePointService {
         .exec()
         .then((doc: IChargePointDocument | null) => {
           if (doc) {
-            resolve();
+            return resolve();
           }
           reject({ status: 404, message: `No ChargePoint found with ID: ${id}` });
         })
@@ -31,7 +32,7 @@ class ChargePointService {
         .exec()
         .then((doc: IChargePointDocument | null) => {
           if (doc) {
-            resolve(doc);
+            return resolve(doc);
           }
           reject({ status: 404, message: `No ChargePoint found with ID: ${id}` });
         })
@@ -47,9 +48,32 @@ class ChargePointService {
         .exec()
         .then((doc: Array<IChargePointDocument>) => {
           if (doc.length > 0) {
-            resolve(doc);
+            return resolve(doc);
           }
-          reject({ status: 404, message: `No ChargePoints found` });
+          reject({ status: 404, message: 'No ChargePoints found.' });
+        })
+        .catch((err: CallbackError) => reject({ status: 500, message: err?.message }));
+    });
+  }
+
+  public updateStatus(chargePoint: IChargePoint): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const queryObj: FilterQuery<IChargePointDocument> = {};
+      if (chargePoint.id) queryObj._id = chargePoint.id;
+      if (chargePoint.name) queryObj.name = chargePoint.name;
+      if (_.isEmpty(queryObj)) return reject({ status: 404, message: 'Invalid query data.' });
+
+      ChargePoint.findOneAndUpdate(
+        queryObj,
+        { status: chargePoint.status },
+        { omitUndefined: true }
+      )
+        .exec()
+        .then((doc: IChargePointDocument | null) => {
+          if (doc) {
+            return resolve();
+          }
+          reject({ status: 404, message: 'No ChargePoint was found with this data.' });
         })
         .catch((err: CallbackError) => reject({ status: 500, message: err?.message }));
     });

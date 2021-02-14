@@ -67,15 +67,11 @@ describe('Unit test for ChargePointController', () => {
           deleteByIdSpy.mockImplementationOnce(() => Promise.resolve());
         });
 
-        it('Should return OK response', async () => {
+        it('Then return OK response', async () => {
           await controller.deleteChargepoint(req, res);
 
           expect(deleteByIdSpy).toHaveBeenCalledWith(reqId);
           expect(res.status).toHaveBeenCalledWith(200);
-          expect(res.json).toHaveBeenCalledWith({
-            status: 200,
-            message: 'Chargepoint deleted successfully.'
-          });
         });
       });
 
@@ -191,19 +187,108 @@ describe('Unit test for ChargePointController', () => {
     });
   });
 
-  describe('Unit test for putChargepoint function', () => {
+  describe('Unit test for putChargepointStatus function', () => {
     const { res, mockClear } = getMockRes();
+    const updateStatusSpy = jest.spyOn(ChargePointService.prototype, 'updateStatus');
 
     beforeEach(() => {
       mockClear();
     });
 
-    describe('Given ChargePoint', () => {
-      it('Should return 200 OK', () => {
-        controller.putChargepoint(getMockReq(), res);
+    describe('Given request without body', () => {
+      const req = getMockReq();
 
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({ message: 'OK' });
+      describe('When the request is validated', () => {
+        it('Then return the status and message error', async () => {
+          await controller.putChargepointStatus(req, res);
+
+          expect(res.status).toHaveBeenCalledWith(400);
+          expect(res.json).toHaveBeenCalledWith({
+            status: 400,
+            message: 'The ID or name of the ChargePoint must be reported.'
+          });
+        });
+      });
+    });
+
+    describe('Given ChargePoint without ID or name', () => {
+      const req = getMockReq({ body: { status: 'ready' } });
+
+      describe('When the request is validated', () => {
+        it('Then return the status and message error', async () => {
+          await controller.putChargepointStatus(req, res);
+
+          expect(res.status).toHaveBeenCalledWith(400);
+          expect(res.json).toHaveBeenCalledWith({
+            status: 400,
+            message: 'The ID or name of the ChargePoint must be reported.'
+          });
+        });
+      });
+    });
+
+    describe('Given ChargePoint without state', () => {
+      const req = getMockReq({ body: { id: 2, name: 'name' } });
+
+      describe('When the request is validated', () => {
+        it('Then return the status and message error', async () => {
+          await controller.putChargepointStatus(req, res);
+
+          expect(res.status).toHaveBeenCalledWith(400);
+          expect(res.json).toHaveBeenCalledWith({
+            status: 400,
+            message: 'The status to be modified must be reported.'
+          });
+        });
+      });
+    });
+
+    describe('Given ChargePoint with invalid state', () => {
+      const req = getMockReq({ body: { id: 2, name: 'name', status: 'invalid' } });
+
+      describe('When the request is validated', () => {
+        it('Then return the status and message error', async () => {
+          await controller.putChargepointStatus(req, res);
+
+          expect(res.status).toHaveBeenCalledWith(400);
+          expect(res.json).toHaveBeenCalledWith({
+            status: 400,
+            message: 'A valid status must be reported.'
+          });
+        });
+      });
+    });
+
+    describe('Given valid ChargePoint', () => {
+      const req = getMockReq({ body: { id: 2, name: 'name', status: 'ready' } });
+
+      describe('When the ChargePoint is modified', () => {
+        beforeEach(() => {
+          updateStatusSpy.mockImplementation(() => Promise.resolve());
+        });
+
+        it('Then return OK response', async () => {
+          await controller.putChargepointStatus(req, res);
+
+          expect(updateStatusSpy).toHaveBeenCalledWith(req.body);
+          expect(res.status).toHaveBeenCalledWith(200);
+        });
+      });
+
+      describe('When an error occurs', () => {
+        const serverError = { status: 404, message: 'Error message' };
+
+        beforeEach(() => {
+          updateStatusSpy.mockImplementation(() => Promise.reject(serverError));
+        });
+
+        it('Then return the status and message error', async () => {
+          await controller.putChargepointStatus(req, res);
+
+          expect(updateStatusSpy).toHaveBeenCalledWith(req.body);
+          expect(res.status).toHaveBeenCalledWith(serverError.status);
+          expect(res.json).toHaveBeenCalledWith(serverError);
+        });
       });
     });
   });

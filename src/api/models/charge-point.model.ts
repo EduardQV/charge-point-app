@@ -4,7 +4,7 @@ const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 export interface IChargePoint {
   id?: number;
-  name: string;
+  name?: string;
   status?: IStatus;
   created_at?: Date;
   deleted_at?: Date;

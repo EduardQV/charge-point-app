@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { IChargePoint } from '../models/charge-point.model';
+import { IChargePoint, IStatus } from '../models/charge-point.model';
 import ChargePointService from '../services/charge-point.service';
 
 class ChargePointController {
@@ -15,7 +15,7 @@ class ChargePointController {
     this.router.delete('/chargepoint/:id', this.deleteChargepoint);
     this.router.get('/chargepoint', this.getChargepoint);
     this.router.get('/chargepoint/:id', this.getChargepointById);
-    this.router.put('/chargepoint/status', this.putChargepoint);
+    this.router.put('/chargepoint/status', this.putChargepointStatus);
   }
 
   public postChargepoint = async (req: Request, res: Response): Promise<void> => {
@@ -35,7 +35,7 @@ class ChargePointController {
     try {
       await this.service.deleteById(+id);
 
-      res.status(200).json({ status: 200, message: 'Chargepoint deleted successfully.' });
+      res.status(200).end();
     } catch (err) {
       const status = err.status ? err.status : 500;
       res.status(status).json(err);
@@ -66,9 +66,32 @@ class ChargePointController {
     }
   };
 
-  public putChargepoint = (req: Request, res: Response): void => {
-    res.status(200).json({ message: 'OK' });
+  public putChargepointStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      this.validateStateChangeRequest(req);
+
+      await this.service.updateStatus(req.body);
+
+      res.status(200).end();
+    } catch (err) {
+      const status = err.status ? err.status : 500;
+      res.status(status).json(err);
+    }
   };
+
+  private validateStateChangeRequest(req: Request): void {
+    if (!req.body || (!req.body.id && !req.body.name)) {
+      throw { status: 400, message: 'The ID or name of the ChargePoint must be reported.' };
+    }
+
+    if (!req.body.status) {
+      throw { status: 400, message: 'The status to be modified must be reported.' };
+    }
+
+    if (!Object.values(IStatus).includes(req.body.status)) {
+      throw { status: 400, message: 'A valid status must be reported.' };
+    }
+  }
 }
 
 export default ChargePointController;

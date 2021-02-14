@@ -211,7 +211,7 @@ describe('Unit test for ChargePointService', () => {
             await service.findAll();
           } catch (err) {
             expect(findSpy).toHaveBeenCalledWith();
-            expect(err).toEqual({ status: 404, message: 'No ChargePoints found' });
+            expect(err).toEqual({ status: 404, message: 'No ChargePoints found.' });
           }
         });
       });
@@ -229,6 +229,114 @@ describe('Unit test for ChargePointService', () => {
           } catch (err) {
             expect(findSpy).toHaveBeenCalledWith();
             expect(err).toEqual({ status: 500, message: expectedError.message });
+          }
+        });
+      });
+    });
+  });
+
+  describe('Unit test for updateStatus function', () => {
+    const findOneAndUpdateSpy = jest.spyOn(ChargePoint, 'findOneAndUpdate');
+
+    beforeEach(() => {
+      findOneAndUpdateSpy.mockClear();
+    });
+
+    describe('Given valid ChargePoint', () => {
+      const req: IChargePoint = {
+        id: 2,
+        name: 'name',
+        status: IStatus.READY
+      };
+
+      describe('When call to db', () => {
+        const queryResponse: IChargePoint = {
+          id: 1,
+          name: 'name',
+          status: IStatus.READY
+        };
+
+        beforeEach(() => {
+          jest.spyOn(Query.prototype, 'exec').mockReturnValue(Promise.resolve(queryResponse));
+        });
+
+        it('Then send the query with the request data', async () => {
+          await service.updateStatus(req);
+
+          expect(findOneAndUpdateSpy).toHaveBeenCalledWith(
+            { _id: req.id, name: req.name },
+            { status: req.status },
+            { omitUndefined: true }
+          );
+        });
+      });
+
+      describe('When a ChargePoint is updated', () => {
+        const queryResponse: IChargePoint = {
+          id: 1,
+          name: 'name',
+          status: IStatus.READY
+        };
+
+        beforeEach(() => {
+          jest.spyOn(Query.prototype, 'exec').mockReturnValue(Promise.resolve(queryResponse));
+        });
+
+        it('Then resolve promise', async () => {
+          await service.updateStatus(req);
+
+          expect(findOneAndUpdateSpy).toHaveBeenCalled();
+        });
+      });
+
+      describe('When a ChargePoint is NOT found', () => {
+        beforeEach(() => {
+          jest.spyOn(Query.prototype, 'exec').mockReturnValue(Promise.resolve(null));
+        });
+
+        it('Then return status 404 with the error message', async () => {
+          try {
+            await service.updateStatus(req);
+          } catch (err) {
+            expect(findOneAndUpdateSpy).toHaveBeenCalled();
+            expect(err).toEqual({
+              status: 404,
+              message: 'No ChargePoint was found with this data.'
+            });
+          }
+        });
+      });
+
+      describe('When an error occurs', () => {
+        const expectedError: CallbackError = { name: 'errorName', message: 'Error message' };
+
+        beforeEach(() => {
+          jest.spyOn(Query.prototype, 'exec').mockReturnValue(Promise.reject(expectedError));
+        });
+
+        it('Then return status 500 with the error message', async () => {
+          try {
+            await service.updateStatus(req);
+          } catch (err) {
+            expect(findOneAndUpdateSpy).toHaveBeenCalled();
+            expect(err).toEqual({ status: 500, message: expectedError.message });
+          }
+        });
+      });
+    });
+
+    describe('Given ChargePoint without query information', () => {
+      const req: IChargePoint = {
+        status: IStatus.READY
+      };
+
+      describe('When build the query', () => {
+        it('Then return the status and message error', async () => {
+          try {
+            await service.updateStatus(req);
+          } catch (err) {
+            expect(findOneAndUpdateSpy).not.toHaveBeenCalled();
+            expect(err).toEqual({ status: 404, message: 'Invalid query data.' });
           }
         });
       });
