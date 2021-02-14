@@ -1,10 +1,14 @@
 import { getMockReq, getMockRes } from '@jest-mock/express';
+import WebSocket from 'ws';
 import ChargePointController from '../../src/api/controllers/charge-point.controller';
 import { IChargePoint } from '../../src/api/models/charge-point.model';
 import ChargePointService from '../../src/api/services/charge-point.service';
+import NotificationService from '../../src/api/services/notification.service';
+jest.mock('ws');
 
 describe('Unit test for ChargePointController', () => {
-  const controller = new ChargePointController();
+  const wssMock: WebSocket.Server = new WebSocket.Server();
+  const controller = new ChargePointController(wssMock);
 
   describe('Unit test for postChargepoint function', () => {
     const { res, mockClear } = getMockRes();
@@ -260,11 +264,19 @@ describe('Unit test for ChargePointController', () => {
     });
 
     describe('Given valid ChargePoint', () => {
-      const req = getMockReq({ body: { id: 2, name: 'name', status: 'ready' } });
+      const reqId = 2;
+      const req = getMockReq({ body: { id: reqId, name: 'name', status: 'ready' } });
 
       describe('When the ChargePoint is modified', () => {
+        const sendChargePointStatusChangeSpy = jest.spyOn(
+          NotificationService.prototype,
+          'sendChargePointStatusChange'
+        );
+        const chargePoint: IChargePoint = { id: reqId, name: 'two' };
+
         beforeEach(() => {
-          updateStatusSpy.mockImplementation(() => Promise.resolve());
+          updateStatusSpy.mockImplementation(() => Promise.resolve(chargePoint));
+          sendChargePointStatusChangeSpy.mockImplementation();
         });
 
         it('Then return OK response', async () => {
@@ -272,6 +284,12 @@ describe('Unit test for ChargePointController', () => {
 
           expect(updateStatusSpy).toHaveBeenCalledWith(req.body);
           expect(res.status).toHaveBeenCalledWith(200);
+        });
+
+        it('Then send a notification of the change', async () => {
+          await controller.putChargepointStatus(req, res);
+
+          expect(sendChargePointStatusChangeSpy).toHaveBeenCalledWith(chargePoint);
         });
       });
 

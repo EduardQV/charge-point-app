@@ -4,19 +4,24 @@ import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import ChargePointController from './api/controllers/charge-point.controller';
 import mongoose, { ConnectionOptions } from 'mongoose';
+import WebSocketServer from './websocket';
+import WebSocket from 'ws';
 
 class App {
   public app: Application;
+  private wss: WebSocket.Server;
 
   constructor() {
-    this.app = express();
     this.setConfig();
+    this.app = express();
+    const httpServer: http.Server = this.startHttpServer();
+    this.wss = new WebSocketServer(httpServer).wss;
     this.connectToMongodb();
     this.initializeMiddlewares();
     this.initializeController();
   }
 
-  public listen(): http.Server {
+  private startHttpServer(): http.Server {
     const serverPort = process.env.APP_PORT || 5000;
     return this.app.listen(serverPort, () =>
       console.log(`Server started in http://localhost:${serverPort}`)
@@ -33,7 +38,7 @@ class App {
   }
 
   private initializeController(): void {
-    this.app.use('', new ChargePointController().router);
+    this.app.use('', new ChargePointController(this.wss).router);
   }
 
   private connectToMongodb(): void {

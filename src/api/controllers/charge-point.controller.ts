@@ -1,26 +1,36 @@
 import { Router, Request, Response } from 'express';
-import { IChargePoint, IStatus } from '../models/charge-point.model';
+import WebSocket from 'ws';
 import ChargePointService from '../services/charge-point.service';
+import NotificationService from '../services/notification.service';
+import { IChargePoint, IStatus } from '../models/charge-point.model';
 
 class ChargePointController {
-  public router = Router();
-  private service = new ChargePointService();
+  private _router: Router;
+  private chargePointService: ChargePointService;
+  private notificationService: NotificationService;
 
-  constructor() {
+  constructor(wss: WebSocket.Server) {
+    this._router = Router();
+    this.notificationService = new NotificationService(wss);
+    this.chargePointService = new ChargePointService();
     this.initializeRutes();
   }
 
+  get router(): Router {
+    return this._router;
+  }
+
   private initializeRutes() {
-    this.router.post('/chargepoint', this.postChargepoint);
-    this.router.delete('/chargepoint/:id', this.deleteChargepoint);
-    this.router.get('/chargepoint', this.getChargepoint);
-    this.router.get('/chargepoint/:id', this.getChargepointById);
-    this.router.put('/chargepoint/status', this.putChargepointStatus);
+    this._router.post('/chargepoint', this.postChargepoint);
+    this._router.delete('/chargepoint/:id', this.deleteChargepoint);
+    this._router.get('/chargepoint', this.getChargepoint);
+    this._router.get('/chargepoint/:id', this.getChargepointById);
+    this._router.put('/chargepoint/status', this.putChargepointStatus);
   }
 
   public postChargepoint = async (req: Request, res: Response): Promise<void> => {
     try {
-      const createdItem: IChargePoint = await this.service.save(req.body);
+      const createdItem: IChargePoint = await this.chargePointService.save(req.body);
 
       res.status(201).json(createdItem);
     } catch (err) {
@@ -33,7 +43,7 @@ class ChargePointController {
     const id = req.params['id'];
 
     try {
-      await this.service.deleteById(+id);
+      await this.chargePointService.deleteById(+id);
 
       res.status(200).end();
     } catch (err) {
@@ -44,7 +54,7 @@ class ChargePointController {
 
   public getChargepoint = async (req: Request, res: Response): Promise<void> => {
     try {
-      const chargePoints: Array<IChargePoint> = await this.service.findAll();
+      const chargePoints: Array<IChargePoint> = await this.chargePointService.findAll();
 
       res.status(200).json(chargePoints);
     } catch (err) {
@@ -57,7 +67,7 @@ class ChargePointController {
     const id = req.params['id'];
 
     try {
-      const chargePoint: IChargePoint = await this.service.findById(+id);
+      const chargePoint: IChargePoint = await this.chargePointService.findById(+id);
 
       res.status(200).json(chargePoint);
     } catch (err) {
@@ -70,8 +80,9 @@ class ChargePointController {
     try {
       this.validateStateChangeRequest(req);
 
-      await this.service.updateStatus(req.body);
+      const updatedChargepoint = await this.chargePointService.updateStatus(req.body);
 
+      this.notificationService.sendChargePointStatusChange(updatedChargepoint);
       res.status(200).end();
     } catch (err) {
       const status = err.status ? err.status : 500;

@@ -56,7 +56,7 @@ class ChargePointService {
     });
   }
 
-  public updateStatus(chargePoint: IChargePoint): Promise<void> {
+  public updateStatus(chargePoint: IChargePoint): Promise<IChargePoint> {
     return new Promise((resolve, reject) => {
       const queryObj: FilterQuery<IChargePointDocument> = {};
       if (chargePoint.id) queryObj._id = chargePoint.id;
@@ -66,12 +66,12 @@ class ChargePointService {
       ChargePoint.findOneAndUpdate(
         queryObj,
         { status: chargePoint.status },
-        { omitUndefined: true }
+        { omitUndefined: true, new: true }
       )
         .exec()
         .then((doc: IChargePointDocument | null) => {
           if (doc) {
-            return resolve();
+            return resolve(doc);
           }
           reject({ status: 404, message: 'No ChargePoint was found with this data.' });
         })

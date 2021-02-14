@@ -266,7 +266,7 @@ describe('Unit test for ChargePointService', () => {
           expect(findOneAndUpdateSpy).toHaveBeenCalledWith(
             { _id: req.id, name: req.name },
             { status: req.status },
-            { omitUndefined: true }
+            { omitUndefined: true, new: true }
           );
         });
       });
@@ -282,10 +282,11 @@ describe('Unit test for ChargePointService', () => {
           jest.spyOn(Query.prototype, 'exec').mockReturnValue(Promise.resolve(queryResponse));
         });
 
-        it('Then resolve promise', async () => {
-          await service.updateStatus(req);
+        it('Then return updated ChargePoint', async () => {
+          const result = await service.updateStatus(req);
 
           expect(findOneAndUpdateSpy).toHaveBeenCalled();
+          expect(result).toEqual(queryResponse);
         });
       });
 
