@@ -42,6 +42,8 @@ class ChargePointService {
   public findAll(): Promise<Array<IChargePoint>> {
     return new Promise((resolve, reject) => {
       ChargePoint.find()
+        .where('deleted_at')
+        .exists(false)
         .exec()
         .then((doc: Array<IChargePointDocument>) => {
           if (doc.length > 0) {
