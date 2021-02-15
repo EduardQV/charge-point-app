@@ -42,6 +42,10 @@ const ChargePointSchema = new Schema(
 
 ChargePointSchema.plugin(AutoIncrement);
 
+ChargePointSchema.path('name').validate(function (name: string) {
+  return name?.length <= 32;
+}, 'The name cannot exceed 32 characters');
+
 ChargePointSchema.set('toJSON', {
   transform: (document: IChargePointDocument, returnedObject: IChargePoint) => {
     returnedObject = {

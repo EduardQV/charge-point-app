@@ -1,13 +1,12 @@
 import { getMockReq, getMockRes } from '@jest-mock/express';
-import WebSocket from 'ws';
 import ChargePointController from '../../src/api/controllers/charge-point.controller';
 import { IChargePoint } from '../../src/api/models/charge-point.model';
 import ChargePointService from '../../src/api/services/charge-point.service';
 import NotificationService from '../../src/api/services/notification.service';
-jest.mock('ws');
+import WebSocketServer from '../../src/websocketserver';
 
 describe('Unit test for ChargePointController', () => {
-  const wssMock: WebSocket.Server = new WebSocket.Server();
+  const wssMock: WebSocketServer = jest.createMockFromModule('../../src/websocketserver');
   const controller = new ChargePointController(wssMock);
 
   describe('Unit test for postChargepoint function', () => {

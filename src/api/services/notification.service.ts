@@ -1,13 +1,13 @@
-import WebSocket from 'ws';
+import WebSocketServer from '../../websocketserver';
 import { IChargePoint } from '../models/charge-point.model';
-import { EventType } from '../models/message.model';
+import { EventType } from '../models/event.model';
 import { Notification } from '../models/notification.model';
 
 class NotificationService {
-  private wss: WebSocket.Server;
+  private webSocketServer: WebSocketServer;
 
-  constructor(wss: WebSocket.Server) {
-    this.wss = wss;
+  constructor(wss: WebSocketServer) {
+    this.webSocketServer = wss;
   }
 
   public sendChargePointStatusChange(chargePoint: IChargePoint): void {
@@ -17,9 +17,7 @@ class NotificationService {
       data: chargePoint
     };
 
-    this.wss.clients.forEach((client: WebSocket) => {
-      client.send(JSON.stringify(notification));
-    });
+    this.webSocketServer.send(notification);
   }
 }
 
