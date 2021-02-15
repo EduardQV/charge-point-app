@@ -4,18 +4,17 @@ import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import ChargePointController from './api/controllers/charge-point.controller';
 import mongoose, { ConnectionOptions } from 'mongoose';
-import WebSocketServer from './websocket';
-import WebSocket from 'ws';
+import WebSocketServer from './websocketserver';
 
 class App {
   public app: Application;
-  private wss: WebSocket.Server;
+  private webSocketServer: WebSocketServer;
 
   constructor() {
     this.setConfig();
     this.app = express();
     const httpServer: http.Server = this.startHttpServer();
-    this.wss = new WebSocketServer(httpServer).wss;
+    this.webSocketServer = new WebSocketServer(httpServer);
     this.connectToMongodb();
     this.initializeMiddlewares();
     this.initializeController();
@@ -38,7 +37,7 @@ class App {
   }
 
   private initializeController(): void {
-    this.app.use('', new ChargePointController(this.wss).router);
+    this.app.use('', new ChargePointController(this.webSocketServer).router);
   }
 
   private connectToMongodb(): void {

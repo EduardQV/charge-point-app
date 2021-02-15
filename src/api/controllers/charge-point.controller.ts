@@ -1,15 +1,15 @@
 import { Router, Request, Response } from 'express';
-import WebSocket from 'ws';
 import ChargePointService from '../services/charge-point.service';
 import NotificationService from '../services/notification.service';
 import { IChargePoint, IStatus } from '../models/charge-point.model';
+import WebSocketServer from '../../websocketserver';
 
 class ChargePointController {
   private _router: Router;
   private chargePointService: ChargePointService;
   private notificationService: NotificationService;
 
-  constructor(wss: WebSocket.Server) {
+  constructor(wss: WebSocketServer) {
     this._router = Router();
     this.notificationService = new NotificationService(wss);
     this.chargePointService = new ChargePointService();

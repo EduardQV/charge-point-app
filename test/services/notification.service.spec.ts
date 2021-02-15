@@ -1,44 +1,37 @@
-import WebSocket from 'ws';
 import { IChargePoint, IStatus } from '../../src/api/models/charge-point.model';
+import { EventType } from '../../src/api/models/event.model';
 import NotificationService from '../../src/api/services/notification.service';
-jest.mock('ws');
+import WebSocketServer from '../../src/websocketserver';
 
 describe('Unit test for NotificationService', () => {
-  const wssMock: WebSocket.Server = new WebSocket.Server();
+  const wssMock: WebSocketServer = jest.createMockFromModule('../../src/websocketserver');
   const service: NotificationService = new NotificationService(wssMock);
+
+  const sendSpy = jest.fn();
+  wssMock.send = jest.fn(sendSpy);
 
   describe('Given ChargePoint', () => {
     const chargePoint: IChargePoint = { id: 2, name: 'two', status: IStatus.READY };
-    const sendSpy = jest.spyOn(WebSocket.prototype, 'send');
 
     beforeEach(() => {
       sendSpy.mockClear();
     });
 
-    describe('When there are clients connected', () => {
-      beforeEach(() => {
-        const client: Set<WebSocket> = new Set();
-        client.add(new WebSocket(''));
-        client.add(new WebSocket(''));
-        wssMock.clients = client;
-      });
-
-      it('Then send chargepoint_status_change notifications', () => {
+    describe('When receive the chargepoint', () => {
+      it('Then build the notification', () => {
         service.sendChargePointStatusChange(chargePoint);
 
-        expect(sendSpy).toHaveBeenCalledTimes(2);
-      });
-    });
-
-    describe('When there are no clients connected', () => {
-      beforeEach(() => {
-        wssMock.clients = new Set();
+        expect(sendSpy).toHaveBeenCalledWith({
+          event: EventType.ChargePointStatusChange,
+          message: `Updated two status to ready`,
+          data: chargePoint
+        });
       });
 
-      it('Then NOT send chargepoint_status_change notifications', () => {
+      it('Then send the notification', () => {
         service.sendChargePointStatusChange(chargePoint);
 
-        expect(sendSpy).not.toHaveBeenCalled();
+        expect(sendSpy).toHaveBeenCalled();
       });
     });
   });
